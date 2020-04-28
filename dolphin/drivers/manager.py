@@ -63,8 +63,9 @@ class DriverManager(object):
         """Remove trap receiver configuration from storage system."""
         pass
 
-    def parse_alert(self, context, storage_id, alert):
+    def parse_alert(self, context, alert_info, additional_info):
         """Parse alert data got from snmp trap server."""
+        # find driver and call driver interface
         pass
 
     def clear_alert(self, context, storage_id, alert):

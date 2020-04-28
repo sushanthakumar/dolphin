@@ -32,3 +32,6 @@ SNMP_MIB_PATH = '/usr/local/lib/python3.6/dist-packages/pysnmp/smi/mibs'
 
 # SNMP dispatcher job id (static identifier)
 SNMP_DISPATCHER_JOB_ID = 1
+
+# SNMP enterprise oid name
+SNMP_ENTERPRISE_OID = 'snmpTrapEnterprise'
