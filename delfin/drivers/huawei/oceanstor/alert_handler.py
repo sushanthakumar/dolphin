@@ -16,6 +16,7 @@
 from oslo_log import log
 
 from delfin import exception
+from delfin.alert_manager import alert_processor
 from delfin.i18n import _
 
 LOG = log.getLogger(__name__)
@@ -24,6 +25,22 @@ LOG = log.getLogger(__name__)
 class AlertHandler(object):
     """Alert handling functions for huawei oceanstor driver"""
     default_me_category = 'storage-subsystem'
+
+    SEVERITY_MAP = {"Critical alarm": alert_processor.Severity.CRITICAL,
+                    "Major alarm": alert_processor.Severity.MAJOR,
+                    "Minor alarm": alert_processor.Severity.MINOR,
+                    "Warning alarm": alert_processor.Severity.WARNING}
+
+    CATEGORY_MAP = {"Fault alarm": alert_processor.Category.FAULT,
+                    "Recovery alarm": alert_processor.Category.RECOVERY,
+                    "Event alarm": alert_processor.Category.EVENT}
+
+    # Attributes expected in alert info to proceed with model filling
+    expected_alert_attributes = ('emcAsyncEventCode', 'connUnitEventSeverity',
+                                 'connUnitEventType', 'connUnitEventDescr',
+                                 'connUnitType', 'emcAsyncEventComponentType',
+                                 'emcAsyncEventComponentName',
+                                 'emcAsyncEventSource')
 
     def __init__(self):
         pass
@@ -61,33 +78,63 @@ class AlertHandler(object):
                   Probable value: Network,Server,Storage..
     """
 
+    """
+     Alert Model	Description
+     *****Filled from delfin resource info***********************
+     storage_id	Id of the storage system on behalf of which alert is generated
+     storage_name	Name of the storage system on behalf of which alert is 
+                     generated
+     manufacturer	Vendor of the device
+     product_name	Product or the model name
+     serial_number	Serial number of the alert generating source
+     ****************************************************
+
+     *****Filled from driver side ***********************
+     source_id	Identification of alerting device at source side such as 
+                  node id, array id etc
+     alert_id	Unique identification for a given alert type
+     alert_name	Unique name for a given alert type
+     severity	Severity of the alert
+     category	Category of alert generated
+     type	Type of the alert generated
+     sequence_number	Sequence number for the alert, uniquely identifies a 
+                               given alert instance used for clearing the alert
+     occur_time	Time at which alert is generated from device
+     detailed_info	Possible cause description or other details about the alert
+     recovery_advice	Some suggestion for handling the given alert
+     resource_type	Resource type of device/source generating alert
+     location	Detailed info about the tracing the alerting device uch as 
+                 slot, rack, component, parts etc
+     clear_type	Indicates the way to clear this alert
+     *****************************************************
+     """
+
     def parse_alert(self, context, alert):
         """Parse alert data got from alert manager and fill the alert model."""
 
         try:
             alert_model = {}
             # These information are sourced from device registration info
-            alert_model['me_dn'] = alert['storage_id']
-            alert_model['me_name'] = alert['storage_name']
-            alert_model['manufacturer'] = alert['vendor']
-            alert_model['product_name'] = alert['model']
-
-            # Fill default values for alert attributes
-            alert_model['category'] = alert['hwIsmReportingAlarmFaultCategory']
-            alert_model['location'] = alert['hwIsmReportingAlarmLocationInfo']
-            alert_model['event_type'] = alert['hwIsmReportingAlarmFaultType']
-            alert_model['severity'] = alert['hwIsmReportingAlarmFaultLevel']
-            alert_model['probable_cause'] \
-                = alert['hwIsmReportingAlarmAdditionInfo']
-            alert_model['me_category'] = self.default_me_category
+            alert_model['source_id'] = alert['hwIsmReportingAlarmNodeCode']
+            alert_model['alert_id'] = alert['hwIsmReportingAlarmAlarmID']
+            alert_model['alert_name'] = alert['hwIsmReportingAlarmFaultTitle']
+            alert_model['severity'] = self.SEVERITY_MAP.get(
+                alert['hwIsmReportingAlarmFaultLevel'],
+                alert_processor.Severity.NOT_SPECIFIED)
+            alert_model['category'] = self.CATEGORY_MAP.get(
+                alert['hwIsmReportingAlarmFaultCategory'],
+                alert_processor.Category.NOT_SPECIFIED)
+            alert_model['type'] = alert['hwIsmReportingAlarmFaultType']
+            alert_model['sequence_number'] \
+                = alert['hwIsmReportingAlarmSerialNo']
             alert_model['occur_time'] = alert['hwIsmReportingAlarmFaultTime']
-            alert_model['alarm_id'] = alert['hwIsmReportingAlarmAlarmID']
-            alert_model['alarm_name'] = alert['hwIsmReportingAlarmFaultTitle']
-            alert_model['device_alert_sn'] = \
-                alert['hwIsmReportingAlarmSerialNo']
-            alert_model['clear_type'] = ""
-            alert_model['match_key'] = ""
-            alert_model['native_me_dn'] = ""
+            alert_model['detailed_info'] \
+                = alert['hwIsmReportingAlarmAdditionInfo']
+            alert_model['recovery_advice'] \
+                = alert['hwIsmReportingAlarmRestoreAdvice']
+            alert_model['resource_type'] = alert_processor.ResourceType.STORAGE
+            alert_model['location'] = alert['hwIsmReportingAlarmLocationInfo']
+
             return alert_model
         except Exception as e:
             LOG.error(e)
