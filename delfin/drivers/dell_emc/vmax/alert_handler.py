@@ -37,7 +37,7 @@ class AlertHandler(object):
                     "mark": alert_processor.Severity.INFORMATIONAL}
 
     RESOURCE_TYPE_MAP = {"STORAGE_SUBSYSTEM":
-                         alert_processor.ResourceType.NETWORK,
+                         alert_processor.ResourceType.STORAGE,
                          "OTHER": alert_processor.ResourceType.OTHER}
 
     # Attributes expected in alert info to proceed with model filling
@@ -54,30 +54,26 @@ class AlertHandler(object):
     Alert Model	Description
     *****Filled from delfin resource info***********************
     storage_id	Id of the storage system on behalf of which alert is generated
-    storage_name	Name of the storage system on behalf of which alert is 
+    storage_name	Name of the storage system on behalf of which alert is
                     generated
     manufacturer	Vendor of the device
     product_name	Product or the model name
     serial_number	Serial number of the alert generating source
     ****************************************************
-    
     *****Filled from driver side ***********************
-    source_id	Identification of alerting device at source side such as 
-                 node id, array id etc
     alert_id	Unique identification for a given alert type
     alert_name	Unique name for a given alert type
     severity	Severity of the alert
     category	Category of alert generated
     type	Type of the alert generated
-    sequence_number	Sequence number for the alert, uniquely identifies a 
+    sequence_number	Sequence number for the alert, uniquely identifies a
                               given alert instance used for clearing the alert
     occur_time	Time at which alert is generated from device
     detailed_info	Possible cause description or other details about the alert
     recovery_advice	Some suggestion for handling the given alert
     resource_type	Resource type of device/source generating alert
-    location	Detailed info about the tracing the alerting device uch as 
+    location	Detailed info about the tracing the alerting device such as
                 slot, rack, component, parts etc
-    clear_type	Indicates the way to clear this alert
     *****************************************************
     """
     def parse_alert(self, context, alert):
@@ -86,7 +82,7 @@ class AlertHandler(object):
         # Check for mandatory alert attributes
         for attr in self.expected_alert_attributes:
             if not alert.get(attr):
-                msg = "Mandatory information %s missing in alert message. " \
+                msg = "Expected information %s missing in alert message. " \
                       % attr
                 raise exception.InvalidInput(msg)
 
@@ -96,8 +92,6 @@ class AlertHandler(object):
         alert_model['alert_id'] = alert['emcAsyncEventCode']
         alert_model['alert_name'] = alert_mapper.alarm_id_name_mapping.get(
             alert_model['alert_id'], alert_model['alert_id'])
-
-        alert_model['source_id'] = alert['connUnitName']
 
         alert_model['severity'] = self.SEVERITY_MAP.get(
             alert['connUnitEventSeverity'],
@@ -120,11 +114,13 @@ class AlertHandler(object):
         # Location is name-value pair having component type and component name
         component_type = alert_mapper.component_type_mapping.get(
             alert.get('emcAsyncEventComponentType'), "")
-        alert_model['location'] = 'Component type: ' \
-                                  + component_type \
-                                  + ',Component name: ' \
+        alert_model['location'] = 'Array id=' \
+                                  + alert['connUnitName'] \
+                                  + ',Component type=' \
+                                  + component_type\
+                                  + ',Component name=' \
                                   + alert['emcAsyncEventComponentName'] \
-                                  + ',Event source: ' \
+                                  + ',Event source=' \
                                   + alert['emcAsyncEventSource']
 
         return alert_model
