@@ -31,7 +31,7 @@ PRIVACY_PROTOCOL_MAP = {"aes": config.usmAesCfb128Protocol,
 
 
 def validate_engine_id(engine_id):
-    # Validates the engine_id format
+    # Validate engine_id, check octet string can be formed from it
     try:
         OctetString.fromHexString(engine_id)
     except ValueError:
@@ -59,10 +59,14 @@ def validate_connectivity(alert_source):
     if version.lower() == 'snmpv3':
         cmd_gen = cmdgen.CommandGenerator(
             snmpEngine=OctetString(hexValue=alert_source['engine_id']))
-        auth_protocol = alert_source['auth_protocol']
-        auth_protocol = AUTH_PROTOCOL_MAP.get(auth_protocol.lower())
-        privacy_protocol = alert_source['privacy_protocol']
-        privacy_protocol = PRIVACY_PROTOCOL_MAP.get(privacy_protocol.lower())
+        auth_protocol = None
+        privacy_protocol = None
+        if alert_source['auth_protocol'] is not None:
+            auth_protocol = AUTH_PROTOCOL_MAP.get(
+                alert_source['auth_protocol'].lower())
+        if alert_source['privacy_protocol'] is not None:
+            privacy_protocol = PRIVACY_PROTOCOL_MAP.get(
+                alert_source['privacy_protocol'].lower())
         security_model = cmdgen.UsmUserData(alert_source['username'],
                                             authKey=alert_source[
                                                 'auth_key'],
@@ -89,5 +93,3 @@ def validate_connectivity(alert_source):
         msg = (_("configuration validation failed with alert source for "
                  "reason: %s.") % error_indication)
         raise exception.InvalidResults(msg)
-
-    return alert_source

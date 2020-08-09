@@ -46,7 +46,7 @@ class AlertSourceController(wsgi.Controller):
         alert_source = self._input_check(alert_source)
 
         # Validate configuration parameters with alert source
-        alert_source = snmp_validator.validate_connectivity(alert_source)
+        snmp_validator.validate_connectivity(alert_source)
 
         snmp_config_to_del = self._get_snmp_config_brief(ctx, id)
         if snmp_config_to_del is not None:
@@ -86,8 +86,8 @@ class AlertSourceController(wsgi.Controller):
             security_level = alert_source.get('security_level')
             engine_id = alert_source.get('engine_id')
 
-            # Validate engine_id, check octet string can be formed from it
-            alert_source = snmp_validator.validate_engine_id(engine_id)
+            # Validate engine_id
+            snmp_validator.validate_engine_id(engine_id)
 
             if not user_name or not security_level or not engine_id:
                 msg = "If snmp version is SNMPv3, then username, " \
