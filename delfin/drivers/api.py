@@ -135,3 +135,12 @@ class API(object):
                                                 storage_id=storage_id)
         return driver.collect_array_metrics(context, storage_id,
                                             interval, is_historic)
+
+    def collect_perf_metrics(self, context, storage_id,
+                             resource_metrics, start_time, end_time):
+        """Collect array performance metrics"""
+        driver = self.driver_manager.get_driver(context,
+                                                storage_id=storage_id)
+        return driver.collect_perf_metrics(context, storage_id,
+                                           resource_metrics, start_time,
+                                           end_time)

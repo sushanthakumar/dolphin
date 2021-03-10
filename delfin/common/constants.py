@@ -245,7 +245,6 @@ DELFIN_ARRAY_METRICS = [
     "write_bandwidth"
 ]
 
-
 BLOCK_SIZE = 4096
 
 
@@ -253,3 +252,18 @@ class ResourceSync(object):
     START = 100
     SUCCEED = 100
     FAILED = 101
+
+
+class Task(object):
+    # Task default interval in sec
+    DEFAULT_INTERVAL = 30
+    # Maximum number of retries for task execution
+    MAX_TASK_RETRY_COUNT = 1
+    PERFORMANCE_TASK_METHOD = "task.driver.performance_monitoring"
+
+
+# Enumerations for task result
+class TaskExecutionResult(object):
+    RUNNING = 'running'
+    FAILED = 'failed'
+    SUCCEED = 'succeed'

@@ -384,3 +384,22 @@ class FakeStorageDriver(driver.StorageDriver):
                 array_metrics.append(m)
 
         return array_metrics
+
+    @wait_random(MIN_WAIT, MAX_WAIT)
+    def collect_perf_metrics(self, context, storage_id,
+                             resource_metrics, start_time,
+                             end_time):
+        rd_array_count = random.randint(MIN_STORAGE, MAX_STORAGE)
+        LOG.info("Fake_perf_metrics number for %s: %d" % (
+            storage_id, rd_array_count))
+        array_metrics = []
+        labels = {'storage_id': storage_id, 'resource_type': 'array'}
+        fake_metrics = self._get_random_performance()
+
+        for _ in range(rd_array_count):
+            for key in constants.DELFIN_ARRAY_METRICS:
+                m = constants.metric_struct(name=key, labels=labels,
+                                            values=fake_metrics[key])
+                array_metrics.append(m)
+
+        return array_metrics

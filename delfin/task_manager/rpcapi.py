@@ -67,15 +67,11 @@ class TaskAPI(object):
                                  storage_id=storage_id,
                                  query_para=query_para)
 
-    def performance_metrics_collection(self, context, storage_id, interval,
-                                       is_historic, resource_task):
+    def performance_metrics_collection(self, context, task_instance_id):
         call_context = self.client.prepare(version='1.0')
         return call_context.cast(context,
                                  'performance_metrics_collection',
-                                 storage_id=storage_id,
-                                 interval=interval,
-                                 is_historic=is_historic,
-                                 resource_task=resource_task)
+                                 task_instance_id=task_instance_id)
 
     def clear_storage_alerts(self, context, storage_id, sequence_number_list):
         call_context = self.client.prepare(version='1.0')

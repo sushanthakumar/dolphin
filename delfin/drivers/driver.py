@@ -115,3 +115,10 @@ class StorageDriver(object):
     def clear_alert(self, context, sequence_number):
         """Clear alert from storage system."""
         pass
+
+    @abc.abstractmethod
+    def collect_perf_metrics(self, context, storage_id,
+                             resource_metrics, start_time, end_time):
+        """Collect performance metrics from storage system."""
+        pass
+
